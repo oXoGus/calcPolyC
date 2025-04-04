@@ -304,6 +304,8 @@ Polynomes derive(Polynomes poly){
         Rationnel mult = {i, 1};
         nPoly.polyCoef[i - 1] = produitRationnel(poly.polyCoef[i], mult);
     }
+
+    return nPoly;
 }
 
 
