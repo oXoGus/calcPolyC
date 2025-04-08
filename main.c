@@ -77,6 +77,15 @@ Rationnel SommeRationnel(Rationnel q1, Rationnel q2){
     return simplifier(nQ);
 }
 
+Rationnel differenceRationnel(Rationnel q1, Rationnel q2){
+    Rationnel nQ;
+    
+    // meme den commun
+    nQ.den = q1.den * q2.den;
+    nQ.num = q1.num * q2.den - q2.num * q1.den;
+    return simplifier(nQ);
+}
+
 int LirePolynome(Polynomes *poly){
     int deg = 0;
     Rationnel polyCoef;
@@ -261,20 +270,29 @@ Polynomes produit(Polynomes poly1, Polynomes poly2){
 
 Rationnel puissance(Rationnel q, int n){
     Rationnel nQ;
+    nQ.num = q.num;
+    nQ.den = q.den;
+
+    int numInit = nQ.num;
+    int denInit = nQ.den;
     
-    nQ.num = pow(q.num, n);
-    nQ.den = pow(q.den, n);
+
+    for (int i = 0; i < n - 1; i++){
+        nQ.num *= numInit;
+        nQ.den *= denInit;
+    }
+    
     return simplifier(nQ);
 }
 
 Rationnel evaluation(Polynomes poly, Rationnel x){
     // on calcul l'image pour x monome par monome
-    // on init un rationnel nul
-    Rationnel res = {0, 1};
+    Rationnel res = poly.polyCoef[0];
     
     // pour chaque coef
-    for (int i = 0; i < poly.degre + 1; i++){
+    for (int i = 1; i < poly.degre + 1; i++){
         res = SommeRationnel(res, produitRationnel(poly.polyCoef[i], puissance(x, i)));
+        
     }
     return res;
 }
@@ -299,7 +317,7 @@ Polynomes derive(Polynomes poly){
     nPoly.polyCoef = (Rationnel *) malloc(sizeof(Rationnel) * (nPoly.degre + 1));
     
     // pour chaque coef du poly suf pour l'index 0 qui disparait
-    for (int i = 1; i < poly.degre; i++){
+    for (int i = 1; i < poly.degre + 1; i++){
 
         Rationnel mult = {i, 1};
         nPoly.polyCoef[i - 1] = produitRationnel(poly.polyCoef[i], mult);
@@ -308,19 +326,64 @@ Polynomes derive(Polynomes poly){
     return nPoly;
 }
 
+Polynomes primitive(Polynomes poly, Rationnel C){
+  
+    
+    Polynomes nPoly;
+    
+    nPoly.degre = poly.degre + 1;
+    
+    nPoly.polyCoef = (Rationnel *) malloc(sizeof(Rationnel) * (nPoly.degre + 1));
+
+    // pour x^n
+    // x^n+1/n+1
+    for (int i = 0; i < poly.degre + 1; i++){
+        Rationnel mult = {1, i + 1};
+        nPoly.polyCoef[i + 1] = produitRationnel(poly.polyCoef[i], mult);    
+    }
+
+    // on ajoute la constante C
+    nPoly.polyCoef[0] = C;
+
+    return nPoly;
+}
+
+Rationnel integrale(Polynomes poly, Rationnel a, Rationnel b){
+    // a est la borne haute et b la borne basse
+
+    // on fait la primitive du poly
+    Rationnel zero = {0, 1};
+    Polynomes F = primitive(poly, zero);
+    
+    // F(a) - F(b)
+    return differenceRationnel(evaluation(F, a),evaluation(F, b));
+}
+
 
 
 
 int main(){
     
+    //printRationnel(puissance(LireRationnel(), 3));
+
     Polynomes poly1;
     LirePolynome(&poly1);
     printPoly(poly1);
-    Polynomes poly2;
+
+    /*Polynomes poly2;
     LirePolynome(&poly2);
-    printPoly(poly2);
-    printPoly(produit(poly1, poly2));
+    printPoly(poly2);*/
     
+    /*printPoly(produit(poly1, poly2));*/
+
+    //printRationnel(evaluation(poly1, LireRationnel()));
+    Rationnel zero = {0, 1};
+
+    printPoly(derive(poly1));
+    printPoly(primitive(poly1, zero));
+    printPoly(derive(primitive(poly1, zero)));
+    printRationnel(integrale(poly1, LireRationnel(), LireRationnel()));
+
 
     /*
     Rationnel q1 = LireRationnel();
