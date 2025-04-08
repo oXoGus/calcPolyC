@@ -54,6 +54,10 @@ Rationnel LireRationnel(){
     
     // le retionnel est rentré sous la forme a/b
     scanf(" %d/%d", &q.num, &q.den);
+    while (!q.den){
+        printf("den != 0\n");
+        scanf(" %d/%d", &q.num, &q.den);
+    }
 
     q = simplifier(q);
 
@@ -116,18 +120,9 @@ int LirePolynome(Polynomes *poly){
             scanf("%d", &deg);
         } while (deg > dgPoly);
         
-
-        
         printf("coef (forme : a/b) = ");
         polyCoef = LireRationnel();
-        while (polyCoef.den == 0){
-            printf("b != 0\n");
-            printRationnel(polyCoef);
-            printf("coef (forme : a/b) = ");
-            polyCoef = LireRationnel();
-        }
         
-
         poly->polyCoef[deg] = polyCoef; 
     }
     return 0;
@@ -348,7 +343,7 @@ Polynomes primitive(Polynomes poly, Rationnel C){
     return nPoly;
 }
 
-Rationnel integrale(Polynomes poly, Rationnel a, Rationnel b){
+Rationnel integrale(Polynomes poly, Rationnel borneMin, Rationnel borenMax){
     // a est la borne haute et b la borne basse
 
     // on fait la primitive du poly
@@ -356,7 +351,7 @@ Rationnel integrale(Polynomes poly, Rationnel a, Rationnel b){
     Polynomes F = primitive(poly, zero);
     
     // F(a) - F(b)
-    return differenceRationnel(evaluation(F, a),evaluation(F, b));
+    return differenceRationnel(evaluation(F, borenMax),evaluation(F, borneMin));
 }
 
 
@@ -366,28 +361,59 @@ int main(){
     
     //printRationnel(puissance(LireRationnel(), 3));
 
+    printf("1er polynome\n");
     Polynomes poly1;
-    LirePolynome(&poly1);
+    int code = LirePolynome(&poly1);
+    
+    // poly valide
+    if (code){
+        return 1;
+    }
     printPoly(poly1);
 
-    /*Polynomes poly2;
-    LirePolynome(&poly2);
-    printPoly(poly2);*/
     
-    /*printPoly(produit(poly1, poly2));*/
 
-    //printRationnel(evaluation(poly1, LireRationnel()));
-    Rationnel zero = {0, 1};
+    printf("2ème polynome\n");
+    Polynomes poly2;
+    code = LirePolynome(&poly2);
+    
+    // poly valide
+    if (code){
+        return 1;
+    }
+    printPoly(poly2);
+    
+    printf("produit : ");
+    printPoly(produit(poly1, poly2));
 
+
+    printf("entrez un Rationnel pour l'évaluation du 1er polynome\n");
+    printf("x = ");
+    Rationnel x = LireRationnel();
+    printf("f(");printRationnel(x);printf(") = ");
+    printRationnel(evaluation(poly1, x));
+    printf("\n");
+
+    printf("f'(x) = ");
     printPoly(derive(poly1));
+
+    printf("F(x) = ");
+    Rationnel zero = {0, 1};
     printPoly(primitive(poly1, zero));
-    printPoly(derive(primitive(poly1, zero)));
-    printRationnel(integrale(poly1, LireRationnel(), LireRationnel()));
+
+    printf("intégrale du 1er polynome : \n");
+    printf("borne min = ");
+    Rationnel borneMin = LireRationnel();
+    
+    printf("borne max = ");
+    Rationnel borneMax = LireRationnel();
+
+    printf("I = ");
+    printRationnel(integrale(poly1, borneMin, borneMax));
+    printf("\n");
 
 
-    /*
-    Rationnel q1 = LireRationnel();
-    Rationnel q2 = LireRationnel();
-    printRationnel(q1);printf("+");printRationnel(q2);printf(" = ");printRationnel(SommeRationnel(q1, q2));
-    */
+    // on libere l'espace mémoire aloué dynamiquement 
+    free(poly1.polyCoef);
+    free(poly2.polyCoef);
 }
